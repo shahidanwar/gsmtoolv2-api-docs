@@ -18,7 +18,7 @@ Each reference file documents one action per method with example requests and ex
 | JSON automation (most common) | **JSON API** |
 | XML integrations | **XML API** |
 | **File orders** (upload `.log`, `.txt`, etc.) | **XML only** — `placefileorder`, `getfileorder` |
-| Server / IMEI / remote orders | Either API |
+| Server / IMEI / remote / Tools for Rent orders | Either API |
 | Single call for all service types (JSON) | JSON `imeiservicelist` (see API Format below) |
 
 **File orders are XML-only.** The JSON API has no `placefileorder` or `getfileorder` actions. Use the XML reference for file workflows.
@@ -64,7 +64,7 @@ Configured **per user** by the site administrator under User → API → **API F
 
 | Setting | Effect on `imeiservicelist` |
 |---------|----------------------------|
-| **Old Format** (default) | Returns **multiple** `SUCCESS` blocks (IMEI, Server/File, Remote) |
+| **Old Format** (default) | Returns **multiple** `SUCCESS` blocks (IMEI, Server/File, Remote, Tools for Rent) |
 | **New Format** | Returns **one** `SUCCESS` block with `"MESSAGE": "All Services"` |
 
 - Not sent as a request parameter — applied automatically for the authenticated user
@@ -86,13 +86,13 @@ Send as POST/GET field (not inside `parameters` XML):
 orderId=12345
 ```
 
-Supported on: `placeimeiorder`, `placeserverorder`, `placeremoteorder`.
+Supported on: `placeimeiorder`, `placeserverorder`, `placeremoteorder`, `placehireorder`.
 
 If an order with the same `orderId` + service + user already exists, the API returns the existing reference instead of creating a duplicate.
 
 ### XML API
 
-Same field name: `orderId`. Supported on: `placeorder`, `placeserverorder`, `placeremoteorder`, `placefileorder`.
+Same field name: `orderId`. Supported on: `placeorder`, `placeserverorder`, `placeremoteorder`, `placehireorder`, `placefileorder`.
 
 ---
 
@@ -117,11 +117,11 @@ Same field name: `orderId`. Supported on: `placeorder`, `placeserverorder`, `pla
 
 ### JSON API
 
-`accountinfo` · `imeiservicelist` · `meplist` · `placeimeiorder` · `placeserverorder` · `placeremoteorder` · `getimeiorder` · `getremoteorder`
+`accountinfo` · `imeiservicelist` · `meplist` · `placeimeiorder` · `placeserverorder` · `placeremoteorder` · `hireservicelist` · `placehireorder` · `getimeiorder` · `getremoteorder` · `gethireorder`
 
 ### XML API
 
-`accountinfo` · `imeiservices` · `fileservices` · `serverservices` · `remoteservices` · `getservices` · `getservicedtls` · `placeorder` · `placefileorder` · `placeserverorder` · `placeremoteorder` · `getimeis` · `getfileorder` · `getserverorder` · `getremoteorder` · `getproviders` · `getmobiles`
+`accountinfo` · `imeiservices` · `fileservices` · `serverservices` · `remoteservices` · `hireservices` · `getservices` · `getservicedtls` · `placeorder` · `placefileorder` · `placeserverorder` · `placeremoteorder` · `placehireorder` · `getimeis` · `getfileorder` · `getserverorder` · `getremoteorder` · `gethireorder` · `getproviders` · `getmobiles`
 
 ---
 
@@ -131,4 +131,5 @@ Same field name: `orderId`. Supported on: `placeorder`, `placeserverorder`, `pla
 - XML order actions pass custom fields as **top-level POST fields** (field label; spaces as underscores)
 - JSON account info response uses the key **`AccoutInfo`** (spelling as returned by the API)
 - Order reference: JSON returns **`REFERENCEID`**; XML returns **`<id>`** — use either value when checking order status
+- Tools for Rent uses its own order numbers. Check those orders with `gethireorder`, not `getimeiorder` or `getremoteorder`. JSON list action is `hireservicelist` (`GROUPTYPE` `HIRE`, also included in `imeiservicelist`). XML list action is `hireservices`. XML status uses a `<hireorder>` tag. `getimeis` sets `<servicetype>hire</servicetype>`.
 - Always use **HTTPS** in production

@@ -223,6 +223,27 @@ class XmlApiReference extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // GET TOOLS FOR RENT SERVICE LIST
+    // -------------------------------------------------------------------------
+    public function getHireServices()
+    {
+        $api = [
+            'username'     => 'demo',
+            'apiaccesskey' => 'X3Z6-T7V5-C8P5-Q8B9-A2A3-A2A3',
+            'url'          => 'https://your-domain.com/',
+        ];
+
+        $action = 'hireservices';
+
+        $response = $this->initXmlApi($api, $action);
+
+        return $response;
+
+        /* Same Package XML structure as imeiservices. */
+
+    }
+
+    // -------------------------------------------------------------------------
     // PLACE IMEI ORDER
     // -------------------------------------------------------------------------
     public function placeImeiOrder()
@@ -377,6 +398,47 @@ class XmlApiReference extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // PLACE TOOLS FOR RENT ORDER
+    // -------------------------------------------------------------------------
+    public function placeHireOrder()
+    {
+        $api = [
+            'username'     => 'demo',
+            'apiaccesskey' => 'X3Z6-T7V5-C8P5-Q8B9-A2A3-A2A3',
+            'url'          => 'https://your-domain.com/',
+        ];
+
+        $action = 'placehireorder';
+
+        $params = [
+            'networkId' => 40, // PackageId from hireservices
+            'IMEI'      => '356938035643809',
+            'Serial'    => 'ABC123456',
+            'orderId'   => 10, // optional: your own order id for deduplication
+        ];
+
+        $response = $this->initXmlApi($api, $action, $params);
+
+        return $response;
+
+        /* Example Result
+
+            <?xml version="1.0" encoding="utf-8"?>
+            <result>
+                <imeis>
+                    <id>10003</id>
+                    <imei>356938035643809</imei>
+                    <status>Pending</status>
+                </imeis>
+            </result>
+
+            Save <id> — use this value with gethireorder.
+            Tools for Rent order numbers are separate from IMEI and Remote numbers.
+
+        */
+    }
+
+    // -------------------------------------------------------------------------
     // GET IMEI / REMOTE ORDERS (bulk)
     // -------------------------------------------------------------------------
     public function getImeiOrders()
@@ -416,6 +478,7 @@ class XmlApiReference extends Controller
                 </imeis>
             </result>
 
+            servicetype values: imei, remote, hire
             statusId values:
               1 = Pending
               2 = Completed
@@ -534,6 +597,48 @@ class XmlApiReference extends Controller
                     <requestedat>2026-07-30 14:22:00</requestedat>
                 </remoteorder>
             </result>
+
+        */
+    }
+
+    // -------------------------------------------------------------------------
+    // GET TOOLS FOR RENT ORDER STATUS
+    // -------------------------------------------------------------------------
+    public function getHireOrder()
+    {
+        $api = [
+            'username'     => 'demo',
+            'apiaccesskey' => 'X3Z6-T7V5-C8P5-Q8B9-A2A3-A2A3',
+            'url'          => 'https://your-domain.com/',
+        ];
+
+        $action = 'gethireorder';
+
+        $params = [
+            'orderId' => 10003, // id returned from placehireorder
+        ];
+
+        $response = $this->initXmlApi($api, $action, $params);
+
+        return $response;
+
+        /* Example Result
+
+            <?xml version="1.0" encoding="utf-8"?>
+            <result>
+                <hireorder>
+                    <id>10003</id>
+                    <package>Tool Rental 24 Hours</package>
+                    <imei>356938035643809</imei>
+                    <statusId>2</statusId>
+                    <status>Completed</status>
+                    <code>Result data here</code>
+                    <requestedat>2026-07-30 14:22:00</requestedat>
+                </hireorder>
+            </result>
+
+            Do not use getimeiorder or getremoteorder for a Tools for Rent id.
+            The same number can exist on another service type.
 
         */
     }
@@ -700,16 +805,19 @@ class XmlApiReference extends Controller
         | fileservices      | File service catalog                 |
         | serverservices    | Server / tool service catalog        |
         | remoteservices    | Remote service catalog               |
+        | hireservices      | Tools for Rent service catalog       |
         | getservices       | Legacy service type list             |
         | getservicedtls    | Legacy service detail dropdown       |
         | placeorder        | Place IMEI order                     |
         | placefileorder    | Place file order                     |
         | placeserverorder  | Place server order                   |
         | placeremoteorder  | Place remote order                   |
-        | getimeis          | Get IMEI / remote order status       |
+        | placehireorder    | Place Tools for Rent order           |
+        | getimeis          | Get IMEI / remote / hire order status|
         | getfileorder      | Get file order status                |
         | getserverorder    | Get server order status              |
         | getremoteorder    | Get remote order status              |
+        | gethireorder      | Get Tools for Rent order status      |
         | getproviders      | Provider / network list              |
         | getmobiles        | Brand / mobile list                  |
 

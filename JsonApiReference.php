@@ -122,7 +122,7 @@ class JsonApiReference extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // GET SERVICE LIST (IMEI + FILE + SERVER + REMOTE)
+    // GET SERVICE LIST (IMEI + FILE + SERVER + REMOTE + TOOLS FOR RENT)
     // -------------------------------------------------------------------------
     public function getServiceList()
     {
@@ -144,7 +144,7 @@ class JsonApiReference extends Controller
          * Set by the site administrator: User → API → "API Format: Old Format / New Format"
          *
          *   Old Format (default):
-         *     imeiservicelist returns multiple SUCCESS blocks (IMEI, Server/File, Remote)
+         *     imeiservicelist returns multiple SUCCESS blocks (IMEI, Server/File, Remote, Tools for Rent)
          *
          *   New Format:
          *     imeiservicelist returns one SUCCESS block with MESSAGE "All Services"
@@ -158,6 +158,7 @@ class JsonApiReference extends Controller
          *     - "IMEI Service List"   (GROUPTYPE: IMEI)
          *     - "Service List"        (GROUPTYPE: SERVER / FILE)
          *     - "Remote Service List" (GROUPTYPE: REMOTE)
+         *     - "Tools for Rent Service List" (GROUPTYPE: HIRE)
          *
          * New Format:
          *   SUCCESS contains a single block:
@@ -226,6 +227,24 @@ class JsonApiReference extends Controller
                                 "SERVICES": { }
                             }
                         }
+                    },
+                    {
+                        "MESSAGE": "Tools for Rent Service List",
+                        "LIST": {
+                            "Rental Tools": {
+                                "GROUPNAME": "Rental Tools",
+                                "GROUPTYPE": "HIRE",
+                                "SERVICES": {
+                                    "40": {
+                                        "SERVICEID": 40,
+                                        "SERVICENAME": "Tool Rental 24 Hours",
+                                        "CREDIT": "8",
+                                        "TIME": "Instant",
+                                        "INFO": "Read before order"
+                                    }
+                                }
+                            }
+                        }
                     }
                 ]
             }
@@ -271,6 +290,19 @@ class JsonApiReference extends Controller
                                 "GROUPNAME": "Remote Services",
                                 "GROUPTYPE": "REMOTE",
                                 "SERVICES": { }
+                            },
+                            "Rental Tools": {
+                                "GROUPNAME": "Rental Tools",
+                                "GROUPTYPE": "HIRE",
+                                "SERVICES": {
+                                    "40": {
+                                        "SERVICEID": 40,
+                                        "SERVICENAME": "Tool Rental 24 Hours",
+                                        "CREDIT": "8",
+                                        "TIME": "Instant",
+                                        "INFO": "Read before order"
+                                    }
+                                }
                             }
                         }
                     }
@@ -428,6 +460,53 @@ class JsonApiReference extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // PLACE TOOLS FOR RENT ORDER
+    // -------------------------------------------------------------------------
+    public function placeHireOrder()
+    {
+        $api = [
+            'username'     => 'demo',
+            'apiaccesskey' => 'X3Z6-T7V5-C8P5-Q8B9-A2A3-A2A3',
+            'url'          => 'https://your-domain.com/',
+        ];
+
+        $action = 'placehireorder';
+
+        $customFields = base64_encode(json_encode([
+            'Serial' => 'ABC123456',
+        ]));
+
+        $parameters = $this->buildParametersXml([
+            'ID'          => 40, // service id from hireservicelist or imeiservicelist (GROUPTYPE HIRE)
+            'IMEI'        => '356938035643809',
+            'CUSTOMFIELD' => $customFields,
+            'QNT'         => 1,
+        ]);
+
+        // Optional: orderId => your client reference for deduplication
+        $response = $this->initJsonApi($api, $action, $parameters, ['orderId' => 12348]);
+
+        return $response;
+
+        /* Example Result
+
+            {
+                "apiversion": "2.0.0",
+                "SUCCESS": [
+                    {
+                        "MESSAGE": "Order received",
+                        "REFERENCEID": 10003
+                    }
+                ]
+            }
+
+            Save REFERENCEID — use this value when calling gethireorder.
+            Tools for Rent order numbers are separate from IMEI and Remote numbers.
+
+        */
+    }
+
+    // -------------------------------------------------------------------------
     // GET IMEI ORDER STATUS
     // -------------------------------------------------------------------------
     public function getImeiOrder()
@@ -510,6 +589,50 @@ class JsonApiReference extends Controller
                     }
                 ]
             }
+
+        */
+    }
+
+    // -------------------------------------------------------------------------
+    // GET TOOLS FOR RENT ORDER STATUS
+    // -------------------------------------------------------------------------
+    public function getHireOrder()
+    {
+        $api = [
+            'username'     => 'demo',
+            'apiaccesskey' => 'X3Z6-T7V5-C8P5-Q8B9-A2A3-A2A3',
+            'url'          => 'https://your-domain.com/',
+        ];
+
+        $action = 'gethireorder';
+
+        $parameters = $this->buildParametersXml([
+            'ID' => 10003, // REFERENCEID returned from placehireorder
+        ]);
+
+        $response = $this->initJsonApi($api, $action, $parameters);
+
+        return $response;
+
+        /* Example Result
+
+            {
+                "apiversion": "2.0.0",
+                "SUCCESS": [
+                    {
+                        "ID": 10003,
+                        "DATE": "2026-07-30 14:22:00",
+                        "SERVICE": "Tool Rental 24 Hours",
+                        "IMEI": "10003",
+                        "CODE": "Result data here",
+                        "STATUS": 4,
+                        "COMMENTS": "Completed"
+                    }
+                ]
+            }
+
+            Same STATUS values as getimeiorder.
+            Do not use getimeiorder or getremoteorder for a Tools for Rent reference.
 
         */
     }
